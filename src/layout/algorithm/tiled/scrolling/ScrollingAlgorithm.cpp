@@ -763,9 +763,9 @@ void CScrollingAlgorithm::newTarget(SP<ITarget> target) {
                 // we are within the edge drop, make a new column
 
                 if (WITHIN_RANGE_LEFT)
-                    droppingColumn = m_scrollingData->add(m_scrollingData->idx(droppingColumn) - 1);
+                    droppingColumn = m_scrollingData->add(m_scrollingData->idx(droppingColumn) - 1, width);
                 else
-                    droppingColumn = m_scrollingData->add(m_scrollingData->idx(droppingColumn));
+                    droppingColumn = m_scrollingData->add(m_scrollingData->idx(droppingColumn), width);
 
                 droppingColumn->add(target);
             }
@@ -969,7 +969,8 @@ void CScrollingAlgorithm::recalculate(eRecalculateReason reason) {
 }
 
 void CScrollingAlgorithm::expelTarget(SP<SScrollingTargetData> tdata, SP<SColumnData> srcCol, std::optional<int64_t> insertIdx) {
-    auto col = !insertIdx ? m_scrollingData->add() : m_scrollingData->add(*insertIdx);
+    const auto width = tdata->target.lock()->window()->m_ruleApplicator->static_.scrollingWidth;
+    auto col = !insertIdx ? m_scrollingData->add(width) : m_scrollingData->add(*insertIdx, width);
     srcCol->remove(tdata->target.lock());
     col->add(tdata);
     m_scrollingData->centerOrFitCol(col);
@@ -1027,6 +1028,8 @@ void CScrollingAlgorithm::moveTargetTo(SP<ITarget> t, Math::eDirection dir, bool
     if (!DATA)
         return;
 
+    const auto  width = t->window()->m_ruleApplicator->static_.scrollingWidth;
+
     const auto CURRENT_COL = DATA->column.lock();
     const auto current_idx = m_scrollingData->idx(CURRENT_COL);
 
@@ -1081,7 +1084,7 @@ void CScrollingAlgorithm::moveTargetTo(SP<ITarget> t, Math::eDirection dir, bool
             DATA->column->remove(t);
 
             if (!COL) {
-                const auto NEWCOL = m_scrollingData->add(-1);
+                const auto NEWCOL = m_scrollingData->add(-1, width);
                 NEWCOL->add(DATA);
                 m_scrollingData->centerOrFitCol(NEWCOL);
             } else {
@@ -1104,7 +1107,7 @@ void CScrollingAlgorithm::moveTargetTo(SP<ITarget> t, Math::eDirection dir, bool
 
             if (!COL) {
                 // make a new one
-                const auto NEWCOL = m_scrollingData->add();
+                const auto NEWCOL = m_scrollingData->add(width);
                 NEWCOL->add(DATA);
                 m_scrollingData->centerOrFitCol(NEWCOL);
             } else {
